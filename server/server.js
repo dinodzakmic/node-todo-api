@@ -17,8 +17,8 @@ app.post('/todos', (req, res) => {
        text: req.body.text
    });
 
-   todo.save().then((doc) => {
-       res.send(doc);
+   todo.save().then((todo) => {
+       res.send(todo);
    }, (err) => {
        res.status(400).send(err);
    }); 
@@ -84,7 +84,7 @@ app.patch('/todos/:id', (req, res) => {
             res.status(404).send();
         }
 
-        res.send({todo});
+        res.send(todo);
     }).catch((err) => res.status(400).send());
 });
 

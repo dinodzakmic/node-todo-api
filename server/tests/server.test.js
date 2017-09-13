@@ -10,7 +10,9 @@ const todos = [{
     _id: new ObjectId()
 }, {
     text: 'Second test todo',
-    _id: new ObjectId()
+    _id: new ObjectId(),
+    completed: true,
+    completedAt: 333
 }];
 
 beforeEach((done) => {
@@ -18,6 +20,7 @@ beforeEach((done) => {
         Todo.insertMany(todos);
     }).then(() => done());
 });
+
 
 describe('POST /todos', () => {
     it('should create new todo', (done) => {
@@ -101,7 +104,8 @@ describe('GET /todos', () => {
 
  describe('DELETE /todos/:id', () => {
     it('should remove a todo', (done) => {
-        var hexId = todos[1]._id.toHexString();
+        console.log(todos);
+        var hexId = todos[0]._id.toHexString();
 
        request(app)
        .delete(`/todos/${hexId}`)
@@ -135,4 +139,70 @@ describe('GET /todos', () => {
         .end(done)
     });
  });
+
+
+describe('PATCH /todos/:id', () => {
+   it('should update the todo', (done) => {
+        var newText = 'Testing patch 1';
+        //get id of first item
+        var hexId = todos[0]._id.toHexString(); 
+        //make PATCH request
+        request(app) 
+        .patch(`/todos/${hexId}`)
+        //update text, set completed to true
+        .send({
+            text: newText,
+            completed: true
+        })
+        //assert for 200, custom assert for res.body.text = sentText     
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.text).toBe(newText);
+        })
+        //assert that completed is true, completedAt is number toBeA
+        .end((err, res) => {
+            if (err) {
+                return done(err);
+            }
+
+            Todo.findById(hexId).then((todo) => {
+                expect(todo.completed).toBe(true);
+                expect(todo.completedAt).toBeA('number');
+                expect(todo.text).toBe(newText);
+                done();
+            }).catch((e) => done(e));
+        }); 
+   });
+   
+   it('should clear completedAt when todo is not completed', (done) => {
+        var newText = 'Testing patch 2';
+        //get id of second todo item
+        var hexId = todos[1]._id.toHexString();
+        //update text, set completed to false
+        request(app)
+        .patch(`/todos/${hexId}`)
+        .send({
+            text: newText,
+            completed: false
+        })
+        //assert for 200, res.body.text = sentText
+        .expect(200)
+        .expect((res) => {
+            expect(res.body.text).toBe(newText);
+        })
+        //assert text changed, completed false, completedAt null toNotExist
+        .end((err, res) => {
+            if(err) {
+                return done(err);
+            }
+
+            Todo.findById(hexId).then((todo) => {
+                expect(todo.text).toBe(newText);
+                expect(todo.completed).toBe(false);
+                expect(todo.completedAt).toNotExist();
+                done();
+            }).catch((e) => done(e));
+        });
+   });
+});
 
