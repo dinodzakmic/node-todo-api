@@ -26,7 +26,7 @@ const todos = [{
     text: 'Second test todo',
     _id: new ObjectId(),
     completed: true,
-    completedAt: 333
+    completedAt: new Date().toISOString()
 }];
 
 const populateTodos = (done) => {

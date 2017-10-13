@@ -48,7 +48,7 @@ app.get('/todos/:id', (req, res) => {
             return res.status(404).send();
         }
 
-        res.send({todo});
+        res.send(todo);
     }).catch((err) => res.status(400).send());
 });
 
@@ -63,7 +63,7 @@ app.delete('/todos/:id', (req, res) => {
         if(!todo) {
             return res.status(404).send();
         }
-        res.send({todo});
+        res.send(todo);
     }).catch((err) => res.status(400).send());
 });
 
@@ -114,7 +114,7 @@ app.post('/users/login', (req,res) => {
 
     User.findByCredentials(body.email, body.password).then((user) => {      
             return user.generateAuthToken().then((token) => {
-                res.header('x-auth', token).send(user);
+                res.send(token);
             });
     }).catch((e) => {
         res.status(400).send(e);

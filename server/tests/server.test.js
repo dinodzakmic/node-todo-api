@@ -58,7 +58,7 @@ describe('GET /todos', () => {
             .get('/todos')
             .expect(200)
             .expect((res) => {
-                expect(res.body.todos.length).toBe(2);
+                expect(res.body.length).toBe(2);
             })
             .end(done)
     });
@@ -70,7 +70,7 @@ describe('GET /todos/:id', () => {
             .get(`/todos/${todos[0]._id.toHexString()}`)
             .expect(200)
             .expect((res) => {
-                expect(res.body.todo.text).toBe(todos[0].text);
+                expect(res.body.text).toBe(todos[0].text);
             })
             .end(done)
     });
@@ -92,14 +92,13 @@ describe('GET /todos/:id', () => {
 
 describe('DELETE /todos/:id', () => {
     it('should remove a todo', (done) => {
-        console.log(todos);
         var hexId = todos[0]._id.toHexString();
 
         request(app)
             .delete(`/todos/${hexId}`)
             .expect(200)
             .expect((res) => {
-                expect(res.body.todo._id).toBe(hexId);
+                expect(res.body._id).toBe(hexId);
             })
             .end((err, res) => {
                 if (err) {
@@ -155,7 +154,7 @@ describe('PATCH /todos/:id', () => {
 
                 Todo.findById(hexId).then((todo) => {
                     expect(todo.completed).toBe(true);
-                    expect(todo.completedAt).toBeA('number');
+                    expect(todo.completedAt).toNotEqual(null)
                     expect(todo.text).toBe(newText);
                     done();
                 }).catch((e) => done(e));
@@ -235,11 +234,11 @@ describe('POST /users', () => {
                 expect(res.body.email).toBe(email);
             })
             .end((err) => {
-                if(err) {
+                if (err) {
                     return done(err);
                 }
 
-                User.findOne({email}).then((user) => {
+                User.findOne({ email }).then((user) => {
                     expect(user).toExist();
                     expect(user.password).toNotBe(password);
                     done();
@@ -251,20 +250,66 @@ describe('POST /users', () => {
         var email = 'example2@example.com';
         var password = 'Pass1';
         request(app)
-        .post('/users')
-        .send({ email, password })
-        .expect(400)
-        .end(done);
+            .post('/users')
+            .send({ email, password })
+            .expect(400)
+            .end(done);
     });
 
     it('should not create user if email in use', (done) => {
         var email = users[1].email;
         var password = 'Qwerty67';
         request(app)
-        .post('/users')
-        .send({ email, password })
-        .expect(400)
-        .end(done);
+            .post('/users')
+            .send({ email, password })
+            .expect(400)
+            .end(done);
     });
 });
 
+describe('POST /users/login', () => {
+    it('should login user and return token', (done) => {
+        var email = users[0].email;
+        var password = users[0].password;
+
+        console.log(email, password);
+
+        request(app)
+            .post('/users/login')
+            .send({ email, password })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body).toExist();
+                console.log(res.body);
+                console.log(users[1]);
+            })
+            .end((err, res) => {
+                if(err) {
+                    return done(err);
+                }
+
+                User.findById(users[0]._id).then((user) => {
+                    expect(user.tokens[0]).toInclude({
+                        access: 'auth',
+                        token: res.body
+                    });
+                    done();
+                }).catch((e) => done(e));
+            });
+        });
+    
+
+    it('should reject invalid login', (done) => {
+        var email = "test@test.com";
+        var password = "password";
+
+        request(app)
+            .post('/users/login')
+            .send({ email, password })
+            .expect(400)
+            .expect((res) => {
+                expect(res.body).toNotEqual('{}')
+            })
+            .end(done);
+    });
+});
