@@ -127,7 +127,6 @@ describe('DELETE /todos/:id', () => {
     });
 });
 
-
 describe('PATCH /todos/:id', () => {
     it('should update the todo', (done) => {
         var newText = 'Testing patch 1';
@@ -269,29 +268,26 @@ describe('POST /users', () => {
 
 describe('POST /users/login', () => {
     it('should login user and return token', (done) => {
-        var email = users[0].email;
-        var password = users[0].password;
-
-        console.log(email, password);
+        console.log(users[1]);
+        var email = users[1].email;
+        var password = users[1].password;
 
         request(app)
             .post('/users/login')
             .send({ email, password })
             .expect(200)
             .expect((res) => {
-                expect(res.body).toExist();
-                console.log(res.body);
-                console.log(users[1]);
+                expect(res.body.token).toExist();            
             })
             .end((err, res) => {
                 if(err) {
                     return done(err);
                 }
-
-                User.findById(users[0]._id).then((user) => {
+               
+                User.findById(users[1]._id).then((user) => {
                     expect(user.tokens[0]).toInclude({
                         access: 'auth',
-                        token: res.body
+                        token: res.body.token
                     });
                     done();
                 }).catch((e) => done(e));

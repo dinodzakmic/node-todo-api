@@ -114,7 +114,7 @@ app.post('/users/login', (req,res) => {
 
     User.findByCredentials(body.email, body.password).then((user) => {      
             return user.generateAuthToken().then((token) => {
-                res.send(token);
+                res.send({token});
             });
     }).catch((e) => {
         res.status(400).send(e);
