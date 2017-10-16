@@ -268,7 +268,6 @@ describe('POST /users', () => {
 
 describe('POST /users/login', () => {
     it('should login user and return token', (done) => {
-        console.log(users[1]);
         var email = users[1].email;
         var password = users[1].password;
 
@@ -277,13 +276,13 @@ describe('POST /users/login', () => {
             .send({ email, password })
             .expect(200)
             .expect((res) => {
-                expect(res.body.token).toExist();            
+                expect(res.body.token).toExist();
             })
             .end((err, res) => {
-                if(err) {
+                if (err) {
                     return done(err);
                 }
-               
+
                 User.findById(users[1]._id).then((user) => {
                     expect(user.tokens[0]).toInclude({
                         access: 'auth',
@@ -292,8 +291,8 @@ describe('POST /users/login', () => {
                     done();
                 }).catch((e) => done(e));
             });
-        });
-    
+    });
+
 
     it('should reject invalid login', (done) => {
         var email = "test@test.com";
@@ -307,5 +306,26 @@ describe('POST /users/login', () => {
                 expect(res.body).toNotEqual('{}')
             })
             .end(done);
+    });
+});
+
+describe('DELETE /users/me/token', () => {
+    it('should remove auth token on logout', (done) => {
+
+        request(app)
+            .delete('/users/me/token')
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(200)
+            .end((err, res) => {
+                if(err){
+                    return done(err);
+                }
+
+                User.findById(users[0]._id).then((user) => {
+                    expect(user.tokens.length).toBe(0);
+                    done();
+                }).catch((e) => done(e));
+            })
+
     });
 });
